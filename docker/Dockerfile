@@ -4,11 +4,6 @@ FROM debian:bookworm
 COPY docker/bashrc /root/.bashrc
 
 RUN apt update
-# RUN apt install -y software-properties-common curl nano
-# RUN add-apt-repository ppa:pybricks/ppa
-
-# # Need Automake
-# RUN apt install -y autoconf libtool
 
 # Setup steps from Espressif for ESP32: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/linux-macos-setup.html
 RUN apt install -y git wget flex bison gperf python3 python3-pip python3-venv cmake ninja-build ccache libffi-dev libssl-dev dfu-util libusb-1.0-0
@@ -20,6 +15,38 @@ WORKDIR /root
 RUN git clone --branch v5.1.2 --recursive https://github.com/espressif/esp-idf.git
 WORKDIR /root/esp-idf
 RUN ./install.sh esp32,esp32s2,esp32s3
+
+WORKDIR /root
+RUN git clone https://github.com/micropython/micropython.git
+WORKDIR /root/micropython
+RUN git checkout v1.22.1
+RUN git submodule update --init lib/micropython-lib
+RUN git submodule update --init lib/berkeley-db-1.xx
+
+# For the unix build
+RUN git submodule update --init lib/mbedtls
+RUN git submodule update --init lib/libffi
+
+RUN make -C mpy-cross
+
+WORKDIR /root/micropython/ports/esp32
+RUN make submodules
+RUN echo "#define MICROPY_PY_UZLIB (1)" >> mpconfigport.h
+
+# WORKDIR /root
+# RUN mkdir usermods
+# WORKDIR /root/usermods
+# RUN git clone https://github.com/dlbeer/quirc.git
+# WORKDIR /root/usermods/quirc
+# RUN git checkout v1.2
+# COPY src/usermods/micropython.cmake /root/usermods/micropython.cmake
+# COPY src/usermods/quirc/quirc_bindings.c /root/usermods/quirc/quirc_bindings.c
+# COPY src/usermods/quirc/micropython.mk /root/usermods/quirc/micropython.mk
+
+# Set up frozen mpy modules
+COPY src/frozen/* /root/micropython/ports/esp32/modules/.
+
+
 
 # # Add the esp32-camera driver
 # WORKDIR /root/home/esp/esp-idf/components
@@ -39,18 +66,6 @@ RUN ./install.sh esp32,esp32s2,esp32s3
 # so we can browse and edit the repos locally but still see the effect of those changes
 # when we build inside the container.
 # ----------------------------------------------------------------------------------------
-
-WORKDIR /root
-RUN git clone https://github.com/micropython/micropython.git
-WORKDIR /root/micropython
-RUN git checkout v1.22.1
-RUN git submodule update --init lib/micropython-lib
-RUN git submodule update --init lib/berkeley-db-1.xx
-
-RUN make -C mpy-cross
-
-WORKDIR /root/micropython/ports/esp32
-RUN make submodules
 
 
 # Build MicroPython firmware from esixtyone's fork of lv_micropython w/his tweaks for esp32-S2
