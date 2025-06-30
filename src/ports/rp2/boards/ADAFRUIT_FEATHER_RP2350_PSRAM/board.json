@@ -1,0 +1,20 @@
+{
+    "deploy": [
+        "../deploy.md"
+    ],
+    "docs": "",
+    "features": [
+        "Dual-core",
+        "External Flash",
+        "External RAM",
+        "USB-C"
+    ],
+    "images": [
+        "6130-00.jpg"
+    ],
+    "mcu": "rp2350",
+    "product": "Feather RP2350",
+    "thumbnail": "",
+    "url": "https://www.adafruit.com/product/6130",
+    "vendor": "Adafruit"
+}

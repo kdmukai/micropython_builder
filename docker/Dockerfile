@@ -11,40 +11,46 @@ RUN apt install -y git wget flex bison gperf python3 python3-pip python3-venv cm
 # RUN pip3 install esptool
 
 # Get ESP-IDF compiler for esp32
-WORKDIR /root
-RUN git clone --branch v5.1.2 --recursive https://github.com/espressif/esp-idf.git
-WORKDIR /root/esp-idf
-RUN ./install.sh esp32,esp32s2,esp32s3
+# WORKDIR /root
+# RUN git clone --branch v5.1.2 --recursive https://github.com/espressif/esp-idf.git
+# WORKDIR /root/esp-idf
+# RUN ./install.sh esp32,esp32s2,esp32s3
 
 WORKDIR /root
 RUN git clone https://github.com/micropython/micropython.git
 WORKDIR /root/micropython
-RUN git checkout v1.22.1
+RUN git checkout v1.25.0
 RUN git submodule update --init lib/micropython-lib
 RUN git submodule update --init lib/berkeley-db-1.xx
+
+RUN make -C mpy-cross
 
 # For the unix build
 RUN git submodule update --init lib/mbedtls
 RUN git submodule update --init lib/libffi
 
-RUN make -C mpy-cross
-
-WORKDIR /root/micropython/ports/esp32
+# For rp2 (rp2350) build
+RUN apt install -y gcc-arm-none-eabi
+WORKDIR /root/micropython/ports/rp2
 RUN make submodules
-RUN echo "#define MICROPY_PY_UZLIB (1)" >> mpconfigport.h
+RUN make clean
+
+# WORKDIR /root/micropython/ports/esp32
+# RUN make submodules
+# RUN echo "#define MICROPY_PY_UZLIB (1)" >> mpconfigport.h
 
 # WORKDIR /root
 # RUN mkdir usermods
 # WORKDIR /root/usermods
-# RUN git clone https://github.com/dlbeer/quirc.git
+# RUN git clone https://github.com/kdmukai/quirc
 # WORKDIR /root/usermods/quirc
-# RUN git checkout v1.2
+# RUN git checkout 2025_06_30
 # COPY src/usermods/micropython.cmake /root/usermods/micropython.cmake
 # COPY src/usermods/quirc/quirc_bindings.c /root/usermods/quirc/quirc_bindings.c
 # COPY src/usermods/quirc/micropython.mk /root/usermods/quirc/micropython.mk
 
 # Set up frozen mpy modules
-COPY src/frozen/* /root/micropython/ports/esp32/modules/.
+# COPY src/frozen/* /root/micropython/ports/esp32/modules/.
 
 
 
