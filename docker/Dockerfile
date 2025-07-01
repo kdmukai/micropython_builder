@@ -12,7 +12,13 @@ RUN apt install -y git wget flex bison gperf python3 python3-pip python3-venv cm
 
 # Get ESP-IDF compiler for esp32
 # WORKDIR /root
+
+# Compatible with MicroPython v1.22.1
 # RUN git clone --branch v5.1.2 --recursive https://github.com/espressif/esp-idf.git
+
+# Compatible with MicroPython v1.25.0
+# RUN git clone --branch v5.2.5 --recursive https://github.com/espressif/esp-idf.git
+
 # WORKDIR /root/esp-idf
 # RUN ./install.sh esp32,esp32s2,esp32s3
 
@@ -35,6 +41,7 @@ WORKDIR /root/micropython/ports/rp2
 RUN make submodules
 RUN make clean
 
+# For esp32 build
 # WORKDIR /root/micropython/ports/esp32
 # RUN make submodules
 # RUN echo "#define MICROPY_PY_UZLIB (1)" >> mpconfigport.h
