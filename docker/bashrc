@@ -99,7 +99,7 @@ fi
 #fi
 
 # Add esp-idf to the PATH
-#source /root/esp-idf/export.sh
+source /root/esp-idf/export.sh
 
 cd /root
 ls

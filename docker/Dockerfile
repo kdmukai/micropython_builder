@@ -11,16 +11,16 @@ RUN apt install -y git wget flex bison gperf python3 python3-pip python3-venv cm
 # RUN pip3 install esptool
 
 # Get ESP-IDF compiler for esp32
-# WORKDIR /root
+WORKDIR /root
 
 # Compatible with MicroPython v1.22.1
 # RUN git clone --branch v5.1.2 --recursive https://github.com/espressif/esp-idf.git
 
 # Compatible with MicroPython v1.25.0
-# RUN git clone --branch v5.2.5 --recursive https://github.com/espressif/esp-idf.git
+RUN git clone --branch v5.4.1 --recursive https://github.com/espressif/esp-idf.git
 
-# WORKDIR /root/esp-idf
-# RUN ./install.sh esp32,esp32s2,esp32s3
+WORKDIR /root/esp-idf
+RUN ./install.sh esp32
 
 WORKDIR /root
 RUN git clone https://github.com/micropython/micropython.git
@@ -42,19 +42,23 @@ RUN make submodules
 RUN make clean
 
 # For esp32 build
-# WORKDIR /root/micropython/ports/esp32
-# RUN make submodules
+WORKDIR /root/micropython/ports/esp32
+# RUN make submodules  # HAVE TO RUN THIS MANUALLY
 # RUN echo "#define MICROPY_PY_UZLIB (1)" >> mpconfigport.h
 
-# WORKDIR /root
-# RUN mkdir usermods
-# WORKDIR /root/usermods
-# RUN git clone https://github.com/kdmukai/quirc
-# WORKDIR /root/usermods/quirc
-# RUN git checkout 2025_06_30
-# COPY src/usermods/micropython.cmake /root/usermods/micropython.cmake
-# COPY src/usermods/quirc/quirc_bindings.c /root/usermods/quirc/quirc_bindings.c
-# COPY src/usermods/quirc/micropython.mk /root/usermods/quirc/micropython.mk
+WORKDIR /root
+RUN mkdir usermods
+RUN mkdir usermods/quirc
+WORKDIR /root/usermods/quirc
+RUN git clone https://github.com/dlbeer/quirc
+WORKDIR /root/usermods/quirc/quirc
+
+# Most recent `main` commit: 2025-05-20
+RUN git checkout 927d680
+
+COPY src/usermods/micropython.cmake /root/usermods/micropython.cmake
+COPY src/usermods/quirc/quirc_bindings.c /root/usermods/quirc/quirc_bindings.c
+COPY src/usermods/quirc/micropython.cmake /root/usermods/quirc/micropython.cmake
 
 # Set up frozen mpy modules
 # COPY src/frozen/* /root/micropython/ports/esp32/modules/.
