@@ -16,6 +16,9 @@ WORKDIR /root
 # Compatible with MicroPython v1.22.1
 # RUN git clone --branch v5.1.2 --recursive https://github.com/espressif/esp-idf.git
 
+# Compatible with MicroPython v1.24.1
+# RUN git clone --branch v5.2.2 --recursive https://github.com/espressif/esp-idf.git
+
 # Compatible with MicroPython v1.25.0
 RUN git clone --branch v5.4.1 --recursive https://github.com/espressif/esp-idf.git
 
@@ -25,6 +28,7 @@ RUN ./install.sh esp32
 WORKDIR /root
 RUN git clone https://github.com/micropython/micropython.git
 WORKDIR /root/micropython
+# RUN git checkout v1.24.1
 RUN git checkout v1.25.0
 RUN git submodule update --init lib/micropython-lib
 RUN git submodule update --init lib/berkeley-db-1.xx
@@ -46,6 +50,8 @@ WORKDIR /root/micropython/ports/esp32
 # RUN make submodules  # HAVE TO RUN THIS MANUALLY
 # RUN echo "#define MICROPY_PY_UZLIB (1)" >> mpconfigport.h
 
+
+# *********** compile in quirc ***********
 WORKDIR /root
 RUN mkdir usermods
 RUN mkdir usermods/quirc
@@ -56,9 +62,43 @@ WORKDIR /root/usermods/quirc/quirc
 # Most recent `main` commit: 2025-05-20
 RUN git checkout 927d680
 
-COPY src/usermods/micropython.cmake /root/usermods/micropython.cmake
 COPY src/usermods/quirc/quirc_bindings.c /root/usermods/quirc/quirc_bindings.c
 COPY src/usermods/quirc/micropython.cmake /root/usermods/quirc/micropython.cmake
+# --------------------------------------------
+
+
+# *********** compile in secp256k1 ***********
+WORKDIR /root/usermods
+RUN mkdir secp256k1
+WORKDIR /root/usermods/secp256k1
+RUN git clone --recursive https://github.com/diybitcoinhardware/secp256k1-embedded.git
+
+# Pin to last commit: 2021-08-21
+WORKDIR /root/usermods/secp256k1/secp256k1-embedded
+RUN git checkout 036f465
+
+COPY src/usermods/secp256k1/micropython.cmake /root/usermods/secp256k1/micropython.cmake
+# --------------------------------------------
+
+
+# *********** Compile in uhashlib ***********
+WORKDIR /root/usermods
+RUN mkdir uhashlib
+WORKDIR /root/usermods/uhashlib
+RUN git clone https://github.com/kdmukai/uhashlib.git
+
+# Need branch with MicroPython v1.24.1 (plus v1.25.0) support
+WORKDIR /root/usermods/uhashlib/uhashlib
+RUN git checkout micropython_1.24.1
+
+COPY src/usermods/uhashlib /root/usermods/uhashlib
+# --------------------------------------------
+
+
+#*********** And our overall master usermods cmake file ***********
+COPY src/usermods/micropython.cmake /root/usermods/micropython.cmake
+# --------------------------------------------
+
 
 # Set up frozen mpy modules
 # COPY src/frozen/* /root/micropython/ports/esp32/modules/.
