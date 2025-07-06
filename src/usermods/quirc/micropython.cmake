@@ -16,12 +16,14 @@ target_include_directories(quirc INTERFACE
 )
 
 target_compile_definitions(quirc INTERFACE
-    # force quirc to use single precision floating point math
+    # force quirc to use `float` instead of `double` to get ~6x speedup on
+    # microcontrollers with single precision floating point unit hardware acceleration.
     -DQUIRC_FLOAT_TYPE=float
-    -DQUIRC_USE_TGMATH=1
+    -DQUIRC_USE_TGMATH
 )
 
-# Be sure to set the -O2 "optimize" flag!!
+# The -O2 "optimize" flag has no effect on esp32s3 performance, but doesn't hurt to
+# include it. Perhaps it'll yield wins on other platforms.
 target_compile_options(quirc INTERFACE
     -O2
 )
