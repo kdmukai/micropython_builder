@@ -12,39 +12,104 @@ RUN apt install -y git wget flex bison gperf python3 python3-pip python3-venv cm
 
 # Get ESP-IDF compiler for esp32
 WORKDIR /root
-RUN git clone --branch v5.1.2 --recursive https://github.com/espressif/esp-idf.git
+
+# Compatible with MicroPython v1.22.1
+# RUN git clone --branch v5.1.2 --recursive https://github.com/espressif/esp-idf.git
+
+# Compatible with MicroPython v1.24.1
+# RUN git clone --branch v5.2.2 --recursive https://github.com/espressif/esp-idf.git
+
+# Compatible with MicroPython v1.25.0
+RUN git clone --branch v5.4.1 --recursive https://github.com/espressif/esp-idf.git
+
 WORKDIR /root/esp-idf
-RUN ./install.sh esp32,esp32s2,esp32s3
+RUN ./install.sh esp32
 
 WORKDIR /root
 RUN git clone https://github.com/micropython/micropython.git
 WORKDIR /root/micropython
-RUN git checkout v1.22.1
+# RUN git checkout v1.24.1
+RUN git checkout v1.25.0
 RUN git submodule update --init lib/micropython-lib
 RUN git submodule update --init lib/berkeley-db-1.xx
+
+RUN make -C mpy-cross
 
 # For the unix build
 RUN git submodule update --init lib/mbedtls
 RUN git submodule update --init lib/libffi
 
-RUN make -C mpy-cross
-
-WORKDIR /root/micropython/ports/esp32
+# For rp2 (rp2350) build
+RUN apt install -y gcc-arm-none-eabi
+WORKDIR /root/micropython/ports/rp2
 RUN make submodules
-RUN echo "#define MICROPY_PY_UZLIB (1)" >> mpconfigport.h
+RUN make clean
 
-# WORKDIR /root
-# RUN mkdir usermods
-# WORKDIR /root/usermods
-# RUN git clone https://github.com/dlbeer/quirc.git
-# WORKDIR /root/usermods/quirc
-# RUN git checkout v1.2
-# COPY src/usermods/micropython.cmake /root/usermods/micropython.cmake
-# COPY src/usermods/quirc/quirc_bindings.c /root/usermods/quirc/quirc_bindings.c
-# COPY src/usermods/quirc/micropython.mk /root/usermods/quirc/micropython.mk
+# For esp32 build
+WORKDIR /root/micropython/ports/esp32
+# RUN make submodules  # HAVE TO RUN THIS MANUALLY
+# RUN echo "#define MICROPY_PY_UZLIB (1)" >> mpconfigport.h  # What was this for? Still needed?
 
-# Set up frozen mpy modules
-COPY src/frozen/* /root/micropython/ports/esp32/modules/.
+# Add embit as a frozen module
+
+
+# *********** compile in quirc ***********
+WORKDIR /root
+RUN mkdir usermods
+RUN mkdir usermods/quirc
+WORKDIR /root/usermods/quirc
+RUN git clone https://github.com/dlbeer/quirc
+WORKDIR /root/usermods/quirc/quirc
+
+# Most recent `main` commit: 2025-05-20
+RUN git checkout 927d680
+
+COPY src/usermods/quirc/quirc_bindings.c /root/usermods/quirc/quirc_bindings.c
+COPY src/usermods/quirc/micropython.cmake /root/usermods/quirc/micropython.cmake
+# --------------------------------------------
+
+
+# *********** compile in secp256k1 ***********
+WORKDIR /root/usermods
+RUN mkdir secp256k1
+WORKDIR /root/usermods/secp256k1
+
+# Have to use kdmukai fork for MicroPython v1.25.0 compatibility
+# RUN git clone --recursive https://github.com/diybitcoinhardware/secp256k1-embedded.git
+RUN git clone --recursive https://github.com/kdmukai/secp256k1-embedded.git
+
+# Pin to MicroPython v1.25.0 compatibility branch
+WORKDIR /root/usermods/secp256k1/secp256k1-embedded
+RUN git checkout micropython_1.25.0
+
+COPY src/usermods/secp256k1 /root/usermods/secp256k1
+# --------------------------------------------
+
+
+# *********** Compile in uhashlib ***********
+WORKDIR /root/usermods
+RUN mkdir uhashlib
+WORKDIR /root/usermods/uhashlib
+RUN git clone https://github.com/kdmukai/uhashlib.git
+
+# Need branch with MicroPython v1.24.1 (plus v1.25.0) support
+WORKDIR /root/usermods/uhashlib/uhashlib
+RUN git checkout micropython_1.24.1
+
+COPY src/usermods/uhashlib /root/usermods/uhashlib
+# --------------------------------------------
+
+
+#*********** And our overall master usermods cmake file ***********
+COPY src/usermods/micropython.cmake /root/usermods/micropython.cmake
+# --------------------------------------------
+
+
+#*********** Set up frozen mpy modules ***********
+
+
+
+# COPY src/frozen/* /root/micropython/ports/esp32/modules/.
 
 
 

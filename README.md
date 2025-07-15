@@ -50,11 +50,11 @@ pip install adafruit-ampy
 
 ```bash
 # List the files on the board
-ampy -p /dev/tty.usbserial-1110 ls
+ampy -p /dev/tty.usbmodem101 ls
 
 # Transfer files.
-ampy -p /dev/tty.usbmodem1234561 put tests/img/c0ffee_120x120.png
-ampy -p /dev/tty.usbmodem1234561 put tests/test_quirc.py
+ampy -p /dev/tty.usbmodem101 put tests/img/c0ffee_120x120.png
+ampy -p /dev/tty.usbmodem101 put tests/test_quirc.py
 
 # Transfer a whole directory
 ampy -p /dev/tty.usbserial-1110 put mydir

@@ -4,4 +4,6 @@
 # used to prefix subdirectories.
 
 include(${CMAKE_CURRENT_LIST_DIR}/quirc/micropython.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/secp256k1/secp256k1-embedded/micropython.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/uhashlib/micropython.cmake)  # override MicroPython's built-in hashlib module
 
