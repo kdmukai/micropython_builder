@@ -48,7 +48,9 @@ RUN make clean
 # For esp32 build
 WORKDIR /root/micropython/ports/esp32
 # RUN make submodules  # HAVE TO RUN THIS MANUALLY
-# RUN echo "#define MICROPY_PY_UZLIB (1)" >> mpconfigport.h
+# RUN echo "#define MICROPY_PY_UZLIB (1)" >> mpconfigport.h  # What was this for? Still needed?
+
+# Add embit as a frozen module
 
 
 # *********** compile in quirc ***********
@@ -71,13 +73,16 @@ COPY src/usermods/quirc/micropython.cmake /root/usermods/quirc/micropython.cmake
 WORKDIR /root/usermods
 RUN mkdir secp256k1
 WORKDIR /root/usermods/secp256k1
-RUN git clone --recursive https://github.com/diybitcoinhardware/secp256k1-embedded.git
 
-# Pin to last commit: 2021-08-21
+# Have to use kdmukai fork for MicroPython v1.25.0 compatibility
+# RUN git clone --recursive https://github.com/diybitcoinhardware/secp256k1-embedded.git
+RUN git clone --recursive https://github.com/kdmukai/secp256k1-embedded.git
+
+# Pin to MicroPython v1.25.0 compatibility branch
 WORKDIR /root/usermods/secp256k1/secp256k1-embedded
-RUN git checkout 036f465
+RUN git checkout micropython_1.25.0
 
-COPY src/usermods/secp256k1/micropython.cmake /root/usermods/secp256k1/micropython.cmake
+COPY src/usermods/secp256k1 /root/usermods/secp256k1
 # --------------------------------------------
 
 
@@ -100,7 +105,10 @@ COPY src/usermods/micropython.cmake /root/usermods/micropython.cmake
 # --------------------------------------------
 
 
-# Set up frozen mpy modules
+#*********** Set up frozen mpy modules ***********
+
+
+
 # COPY src/frozen/* /root/micropython/ports/esp32/modules/.
 
 
